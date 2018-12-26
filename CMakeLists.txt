@@ -9,21 +9,26 @@ add_definitions(-std=c++11 -O3)
 set(CXX_FLAGS "-Wall")
 set(CMAKE_CXX_FLAGS "${CXX_FLAGS}")
 
-set(sources src/MPC.cpp src/main.cpp)
+set(core_sources src/MPC.cpp)
+
+# This is where I installed Ipopt
+include_directories($ENV{HOME}/libs/include)
+link_directories($ENV{HOME}/libs/lib)
 
 include_directories(/usr/local/include)
 link_directories(/usr/local/lib)
-include_directories(src/Eigen-3.3)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
-include_directories(/usr/local/opt/openssl/include)
-link_directories(/usr/local/opt/openssl/lib)
-link_directories(/usr/local/Cellar/libuv/1*/lib)
+    include_directories(/usr/local/opt/openssl/include)
+    link_directories(/usr/local/opt/openssl/lib)
+
+    file(GLOB LIBUV_DIR /usr/local/Cellar/libuv/1*/lib)
+    link_directories(${LIBUV_DIR})
 
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
-add_executable(mpc ${sources})
+add_executable(mpc src/main.cpp ${core_sources})
 
 target_link_libraries(mpc ipopt z ssl uv uWS)
 
