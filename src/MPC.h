@@ -5,10 +5,11 @@
 #include "Eigen-3.3/Eigen/Core"
 
 class MPC {
- public:
-  MPC();
 
-  virtual ~MPC();
+public:
+
+  MPC() = default;
+  virtual ~MPC() = default;
 
   // Solve the model given an initial state and polynomial coefficients.
   // Return the first actuations.
