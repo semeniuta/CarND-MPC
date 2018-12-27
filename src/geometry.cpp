@@ -6,6 +6,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <limits>
 
 // Evaluate a polynomial.
 double polyeval(const Eigen::VectorXd& coeffs, double x) {
@@ -127,5 +128,30 @@ double distance(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2) {
   }
 
   return sqrt(ss);
+
+}
+
+ClosestWaypoint findClosestWaypoint(const WaypointsMap& map) {
+
+  Eigen::VectorXd origin{2};
+  origin << 0, 0;
+
+  auto n = map.x.size();
+  double min_dist = std::numeric_limits<double>::max();
+  unsigned int closest_idx = 0;
+  Eigen::VectorXd current{2};
+
+  for (unsigned int i = 0; i < n; i++) {
+
+    current << map.x[i], map.y[i];
+    double dist = distance(current, origin);
+
+    if (dist < min_dist) {
+      min_dist = dist;
+      closest_idx = i;
+    }
+  }
+
+  return ClosestWaypoint{closest_idx, min_dist};
 
 }
