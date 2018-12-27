@@ -62,8 +62,8 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
-          double steer_value;
-          double throttle_value;
+          double steer_value = 0.;
+          double throttle_value = 10;
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
