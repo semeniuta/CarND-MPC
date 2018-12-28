@@ -169,12 +169,18 @@ WaypointsMap getNextWaypoints(const WaypointsMap& points, const ClosestWaypoint&
   nextWaypoints.x = Eigen::VectorXd{n};
   nextWaypoints.y = Eigen::VectorXd{n};
 
-  for (unsigned int i = 0; i < n; i++) {
+  unsigned int i = 0;
+  while (i < n) {
 
     nextWaypoints.x(i) = points.x(idx);
     nextWaypoints.y(i) = points.y(idx);
 
     idx++;
+    if (idx == n) {
+      idx = 0;
+    }
+
+    i++;
 
   }
 
