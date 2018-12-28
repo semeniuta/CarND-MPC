@@ -57,6 +57,11 @@ struct ClosestWaypoint {
   double distanceToOrigin;
 };
 
+struct Line {
+  double slope;
+  double intercept;
+};
+
 // For converting back and forth between radians and degrees.
 //constexpr double pi() { return M_PI; }
 //double deg2rad(double x) { return x * pi() / 180; }
@@ -75,5 +80,9 @@ Eigen::MatrixXd createPose(double x, double y, double theta);
 double distance(const Eigen::VectorXd& x1, const Eigen::VectorXd& x2);
 
 ClosestWaypoint findClosestWaypoint(const WaypointsMap& map);
+
+WaypointsMap getNextWaypoints(const WaypointsMap& points, const ClosestWaypoint& closest, int n);
+
+Line closestLine(const WaypointsMap& points, const ClosestWaypoint& closest);
 
 #endif //GEOMETRY_H

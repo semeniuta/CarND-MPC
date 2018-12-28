@@ -155,3 +155,59 @@ ClosestWaypoint findClosestWaypoint(const WaypointsMap& map) {
   return ClosestWaypoint{closest_idx, min_dist};
 
 }
+
+WaypointsMap getNextWaypoints(const WaypointsMap& points, const ClosestWaypoint& closest, int n) {
+
+  int idx = closest.index;
+
+  if (closest.distanceToOrigin < 0) {
+    idx++;
+  }
+
+  WaypointsMap nextWaypoints;
+
+  nextWaypoints.x = Eigen::VectorXd{n};
+  nextWaypoints.y = Eigen::VectorXd{n};
+
+  for (unsigned int i = 0; i < n; i++) {
+
+    nextWaypoints.x(i) = points.x(idx);
+    nextWaypoints.y(i) = points.y(idx);
+
+    idx++;
+
+  }
+
+  return nextWaypoints;
+}
+
+Line closestLine(const WaypointsMap& points, const ClosestWaypoint& closest) {
+
+  double x1, x2, y1, y2;
+
+  if (closest.distanceToOrigin > 0) {
+
+    x1 = points.x(closest.index - 1);
+    y1 = points.y(closest.index - 1);
+
+    x2 = points.x(closest.index);
+    y2 = points.y(closest.index);
+
+  } else {
+
+    x1 = points.x(closest.index);
+    y1 = points.y(closest.index);
+
+    x2 = points.x(closest.index + 1);
+    y2 = points.y(closest.index + 1);
+
+  }
+
+  Line line{};
+
+  line.slope = (y2 - y1) / (x2 - x1);
+  line.intercept = y2 - line.slope * x2;
+
+  return line;
+
+}

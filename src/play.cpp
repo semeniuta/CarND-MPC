@@ -26,11 +26,16 @@ int main() {
 
   WaypointsMap map_t = map.transformAll(t_map_to_car);
 
-  printMap(map_t);
-
   auto closest = findClosestWaypoint(map_t);
 
   std::cout << "Closest index: " << closest.index << ". Distance: " << closest.distanceToOrigin << std::endl;
+
+  auto nextWP = getNextWaypoints(map_t, closest, 5);
+  printMap(nextWP);
+
+  Line cl = closestLine(map_t, closest);
+
+  std::cout << "Closest line: " << cl.slope << ", " << cl.intercept << std::endl;
 
 
 }
