@@ -9,7 +9,7 @@ add_definitions(-std=c++11 -O3)
 set(CXX_FLAGS "-Wall")
 set(CMAKE_CXX_FLAGS "${CXX_FLAGS}")
 
-set(core_sources src/MPC.cpp src/geometry.cpp src/Localizer.cpp)
+set(core_sources src/MPC.cpp src/geometry.cpp src/Localizer.cpp src/client.cpp)
 
 # This is where I installed Ipopt
 include_directories($ENV{HOME}/libs/include)
