@@ -30,12 +30,17 @@ int main() {
 
   std::cout << "Closest index: " << closest.index << ". Distance: " << closest.distanceToOrigin << std::endl;
 
-  auto nextWP = getNextWaypoints(map_t, closest, 5);
+  auto nextWP = getNextWaypoints(map_t, closest, 10);
   printMap(nextWP);
 
   Line cl = closestLine(map_t, closest);
 
   std::cout << "Closest line: " << cl.slope << ", " << cl.intercept << std::endl;
 
+  Eigen::VectorXd coeffs = polyfit(nextWP.x, nextWP.y, 3);
+  std::cout << "Coefficients:\n" << coeffs << std::endl;
+
+  auto err = errorsFromLine(cl);
+  std::cout << "cte: " << err.cte << ", epsi:" << err.epsi << std::endl;
 
 }

@@ -225,3 +225,17 @@ Line closestLine(const WaypointsMap& points, const ClosestWaypoint& closest) {
   return line;
 
 }
+
+Errors errorsFromLine(const Line& line) {
+
+  double x0 = 0.;
+  double y0 = 0.;
+
+  Errors err{};
+
+  err.cte = abs(line.intercept + line.slope * x0 - y0) / sqrt(1 + line.slope * line.slope);
+  err.epsi = atan(line.slope);
+
+  return err;
+
+}

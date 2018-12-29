@@ -62,6 +62,11 @@ struct Line {
   double intercept;
 };
 
+struct Errors {
+  double cte;
+  double epsi;
+};
+
 double deg2rad(double x);
 
 double rad2deg(double x);
@@ -83,5 +88,7 @@ ClosestWaypoint findClosestWaypoint(const WaypointsMap& map);
 WaypointsMap getNextWaypoints(const WaypointsMap& points, const ClosestWaypoint& closest, int n);
 
 Line closestLine(const WaypointsMap& points, const ClosestWaypoint& closest);
+
+Errors errorsFromLine(const Line& line);
 
 #endif //GEOMETRY_H
