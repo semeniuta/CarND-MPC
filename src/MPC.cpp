@@ -2,6 +2,7 @@
 #include <cppad/cppad.hpp>
 #include <cppad/ipopt/solve.hpp>
 #include "Eigen-3.3/Eigen/Core"
+#include "model.h"
 
 using CppAD::AD;
 
@@ -61,14 +62,14 @@ struct FG_eval {
 
       fg[1 + x_start + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * MPC_dt);
       fg[1 + y_start + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * MPC_dt);
-      fg[1 + psi_start + t] = psi1 - (psi0 + (v0 / MPC_Lf) * delta0 * MPC_dt);
+      fg[1 + psi_start + t] = psi1 - (psi0 - (v0 / Lf) * delta0 * MPC_dt);  // NOTE: Unity coordinates
       fg[1 + v_start + t] = v1 - (v0 + a0 * MPC_dt);
 
       AD<double> f0 = coeffs_[0] + coeffs_[1] * x0;
       AD<double> psides0 = CppAD::atan(coeffs_[1]);
 
       fg[1 + cte_start + t] = cte1 - (f0 - y0 + v0 * CppAD::sin(epsi0) * MPC_dt);
-      fg[1 + epsi_start + t] = epsi1 - (psi0 - psides0 + (v0 / MPC_Lf) * delta0 * MPC_dt);
+      fg[1 + epsi_start + t] = epsi1 - (psi0 - psides0 + (v0 / Lf) * delta0 * MPC_dt);
 
     }
 
@@ -88,13 +89,10 @@ OptResult solve(const Eigen::VectorXd& state, const Eigen::VectorXd& coeffs) {
   double cte = state[4];
   double epsi = state[5];
 
-  size_t n_vars = MPC_N * 6 + (MPC_N - 1) * 2;
-  size_t n_constraints = MPC_N * 6;
-
   // Initial value of the independent variables.
   // SHOULD BE 0 besides initial state.
-  Dvector vars{n_vars};
-  for (int i = 0; i < n_vars; i++) {
+  Dvector vars{MPC_nvars};
+  for (int i = 0; i < MPC_nvars; i++) {
     vars[i] = 0;
   }
 
@@ -106,8 +104,8 @@ OptResult solve(const Eigen::VectorXd& state, const Eigen::VectorXd& coeffs) {
   vars[cte_start] = cte;
   vars[epsi_start] = epsi;
 
-  Dvector vars_lowerbound(n_vars);
-  Dvector vars_upperbound(n_vars);
+  Dvector vars_lowerbound(MPC_nvars);
+  Dvector vars_upperbound(MPC_nvars);
 
   // Set all non-actuators upper and lowerlimits
   // to the max negative and positive values.
@@ -126,16 +124,16 @@ OptResult solve(const Eigen::VectorXd& state, const Eigen::VectorXd& coeffs) {
 
   // Acceleration/decceleration upper and lower limits.
   // NOTE: Feel free to change this to something else.
-  for (int i = a_start; i < n_vars; i++) {
+  for (int i = a_start; i < MPC_nvars; i++) {
     vars_lowerbound[i] = -1.0;
     vars_upperbound[i] = 1.0;
   }
 
   // Lower and upper limits for the constraints
   // Should be 0 besides initial state.
-  Dvector constraints_lowerbound(n_constraints);
-  Dvector constraints_upperbound(n_constraints);
-  for (int i = 0; i < n_constraints; i++) {
+  Dvector constraints_lowerbound(MPC_nconstraints);
+  Dvector constraints_upperbound(MPC_nconstraints);
+  for (int i = 0; i < MPC_nconstraints; i++) {
     constraints_lowerbound[i] = 0;
     constraints_upperbound[i] = 0;
   }
@@ -192,8 +190,8 @@ OptResult solve(const Eigen::VectorXd& state, const Eigen::VectorXd& coeffs) {
 
   OptResult result{};
   result.cost = cost;
-  for (unsigned int i = 0; i < n_vars; i++) {
-    result.variables.push_back(solution.x[1 + i]);
+  for (unsigned int i = 0; i < MPC_nvars; i++) {
+    result.variables.push_back(solution.x[i]);
   }
 
   return result;
