@@ -5,63 +5,31 @@
 
 using CppAD::AD;
 
-// Timestep length and duration
-size_t N = 25;
-double dt = 0.05;
+struct FG_eval {
 
-// Start indices in the variables' vector
-size_t x_start = 0;
-size_t y_start = x_start + N;
-size_t psi_start = y_start + N;
-size_t v_start = psi_start + N;
-size_t cte_start = v_start + N;
-size_t epsi_start = cte_start + N;
-size_t delta_start = epsi_start + N;
-size_t a_start = delta_start + N - 1;
-
-// This value assumes the model presented in the classroom is used.
-//
-// It was obtained by measuring the radius formed by running the vehicle in the
-// simulator around in a circle with a constant steering angle and velocity on a
-// flat terrain.
-//
-// Lf was tuned until the the radius formed by the simulating the model
-// presented in the classroom matched the previous radius.
-//
-// This is the length from front to CoG that has a similar radius.
-const double Lf = 2.67;
-
-class FG_eval {
-
-public:
   // Fitted polynomial coefficients
-  Eigen::VectorXd coeffs;
+  Eigen::VectorXd coeffs_;
 
-  FG_eval(Eigen::VectorXd coeffs) { this->coeffs = coeffs; }
+  explicit FG_eval(const Eigen::VectorXd& coeffs) : coeffs_{coeffs} { }
 
   typedef CPPAD_TESTVECTOR(AD<double>) ADvector;
 
   void operator()(ADvector& fg, const ADvector& vars) {
 
-    // TODO: implement MPC
-    // `fg` a vector of the cost constraints, `vars` is a vector of variable values (state & actuators)
-    // NOTE: You'll probably go back and forth between this function and
-    // the Solver function below.
-
-    // The cost is stored is the first element of `fg`.
-    // Any additions to the cost should be added to `fg[0]`.
+    // `fg` is a vector of the cost constraints, `vars` is a vector of variable values (state & actuators)
+    // The cost is stored is the first element of `fg`
+    // Any additions to the cost should be added to `fg[0]`
     fg[0] = 0;
 
-    for (unsigned int t = 0; t < N; t++) {
+    for (unsigned int t = 0; t < MPC_N; t++) {
 
       fg[0] += CppAD::pow(vars[cte_start + t], 2);
       fg[0] += CppAD::pow(vars[epsi_start + t], 2);
 
-      double ref_v = 40;
-      fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
+      fg[0] += CppAD::pow(vars[v_start + t] - MCP_vref, 2);
       fg[0] += CppAD::pow(vars[delta_start + t], 2);
 
-      if (t < N - 1) {
+      if (t < MPC_N - 1) {
         fg[0] += CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
       }
 
@@ -74,7 +42,7 @@ public:
     fg[1 + cte_start] = vars[cte_start];
     fg[1 + epsi_start] = vars[epsi_start];
 
-    for (unsigned int t = 1; t < N; t++) {
+    for (unsigned int t = 1; t < MPC_N; t++) {
 
       AD<double> x1 = vars[x_start + t];
       AD<double> y1 = vars[y_start + t];
@@ -91,16 +59,16 @@ public:
       AD<double> delta0 = vars[delta_start + t - 1];
       AD<double> epsi0 = vars[epsi_start + t - 1];
 
-      fg[1 + x_start + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * dt);
-      fg[1 + y_start + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * dt);
-      fg[1 + psi_start + t] = psi1 - (psi0 + (v0 / Lf) * delta0 * dt);
-      fg[1 + v_start + t] = v1 - (v0 + a0 * dt);
+      fg[1 + x_start + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * MPC_dt);
+      fg[1 + y_start + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * MPC_dt);
+      fg[1 + psi_start + t] = psi1 - (psi0 + (v0 / MPC_Lf) * delta0 * MPC_dt);
+      fg[1 + v_start + t] = v1 - (v0 + a0 * MPC_dt);
 
-      AD<double> f0 = coeffs[0] + coeffs[1] * x0;
-      AD<double> psides0 = CppAD::atan(coeffs[1]);
+      AD<double> f0 = coeffs_[0] + coeffs_[1] * x0;
+      AD<double> psides0 = CppAD::atan(coeffs_[1]);
 
-      fg[1 + cte_start + t] = cte1 - (f0 - y0 + v0 * CppAD::sin(epsi0) * dt);
-      fg[1 + epsi_start + t] = epsi1 - (psi0 - psides0 + (v0 / Lf) * delta0 * dt);
+      fg[1 + cte_start + t] = cte1 - (f0 - y0 + v0 * CppAD::sin(epsi0) * MPC_dt);
+      fg[1 + epsi_start + t] = epsi1 - (psi0 - psides0 + (v0 / MPC_Lf) * delta0 * MPC_dt);
 
     }
 
@@ -108,11 +76,7 @@ public:
 
 };
 
-//
-// MPC class definition implementation.
-//
-
-std::vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
+OptResult solve(const Eigen::VectorXd& state, const Eigen::VectorXd& coeffs) {
 
   bool ok = true;
   typedef CPPAD_TESTVECTOR(double) Dvector;
@@ -124,12 +88,12 @@ std::vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   double cte = state[4];
   double epsi = state[5];
 
-  size_t n_vars = N * 6 + (N - 1) * 2;
-  size_t n_constraints = N * 6;
+  size_t n_vars = MPC_N * 6 + (MPC_N - 1) * 2;
+  size_t n_constraints = MPC_N * 6;
 
   // Initial value of the independent variables.
   // SHOULD BE 0 besides initial state.
-  Dvector vars(n_vars);
+  Dvector vars{n_vars};
   for (int i = 0; i < n_vars; i++) {
     vars[i] = 0;
   }
@@ -191,7 +155,7 @@ std::vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   constraints_upperbound[epsi_start] = epsi;
 
   // object that computes objective and constraints
-  FG_eval fg_eval(coeffs);
+  FG_eval fg_eval{coeffs};
 
   //
   // NOTE: You don't have to worry about these options
@@ -226,10 +190,12 @@ std::vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   auto cost = solution.obj_value;
   std::cout << "Cost " << cost << std::endl;
 
-  // Return the first actuator values
-  return {solution.x[x_start + 1],   solution.x[y_start + 1],
-          solution.x[psi_start + 1], solution.x[v_start + 1],
-          solution.x[cte_start + 1], solution.x[epsi_start + 1],
-          solution.x[delta_start],   solution.x[a_start]};
+  OptResult result{};
+  result.cost = cost;
+  for (unsigned int i = 0; i < n_vars; i++) {
+    result.variables.push_back(solution.x[1 + i]);
+  }
+
+  return result;
 
 }
