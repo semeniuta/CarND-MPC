@@ -13,6 +13,7 @@ public:
 
   Eigen::VectorXd state_;
   Eigen::VectorXd poly_coeffs_;
+  Eigen::MatrixXd vehicle_pose_;
   bool never_activated_;
 
   Localizer() = delete;

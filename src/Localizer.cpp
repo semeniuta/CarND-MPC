@@ -12,13 +12,14 @@ Localizer::Localizer(const WaypointsMap& map, int n_waypoints, int poly_order)
 
   state_ = Eigen::VectorXd{6};
   poly_coeffs_ = Eigen::VectorXd{poly_order_ + 1};
+  vehicle_pose_ = Eigen::MatrixXd{3, 3};
 
 }
 
 void Localizer::activate(double x, double y, double psi, double v) {
 
-  auto car_pose = createPose(x, y, psi);
-  t_map_to_vehicle_ = invertPose(car_pose);
+  vehicle_pose_ = createPose(x, y, psi);
+  t_map_to_vehicle_ = invertPose(vehicle_pose_);
 
   waypoints_from_vehicle_ = map_.transformAll(t_map_to_vehicle_);
   closest_ = findClosestWaypoint(waypoints_from_vehicle_);
