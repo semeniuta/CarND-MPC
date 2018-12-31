@@ -217,6 +217,14 @@ Line closestLine(const WaypointsMap& points, const ClosestWaypoint& closest) {
 
   }
 
+  Line line = createLine(x1, y1, x2, y2);
+
+  return line;
+
+}
+
+Line createLine(double x1, double y1, double x2, double y2) {
+
   Line line{};
 
   line.slope = (y2 - y1) / (x2 - x1);
@@ -226,10 +234,7 @@ Line closestLine(const WaypointsMap& points, const ClosestWaypoint& closest) {
 
 }
 
-Errors errorsFromLine(const Line& line) {
-
-  double x0 = 0.;
-  double y0 = 0.;
+Errors errorsFromLine(const Line& line, double x0, double y0) {
 
   Errors err{};
 

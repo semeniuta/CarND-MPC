@@ -89,6 +89,8 @@ WaypointsMap getNextWaypoints(const WaypointsMap& points, const ClosestWaypoint&
 
 Line closestLine(const WaypointsMap& points, const ClosestWaypoint& closest);
 
-Errors errorsFromLine(const Line& line);
+Errors errorsFromLine(const Line& line, double x0=0., double y0=0.);
+
+Line createLine(double x1, double y1, double x2, double y2);
 
 #endif //GEOMETRY_H
