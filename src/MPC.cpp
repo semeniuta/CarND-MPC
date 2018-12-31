@@ -65,11 +65,11 @@ struct FG_eval {
       fg[1 + psi_start + t] = psi1 - (psi0 - (v0 / Lf) * delta0 * MPC_dt);  // NOTE: Unity coordinates
       fg[1 + v_start + t] = v1 - (v0 + a0 * MPC_dt);
 
-      AD<double> f0 = coeffs_[0] + coeffs_[1] * x0;
-      AD<double> psides0 = CppAD::atan(coeffs_[1]);
+      AD<double> f0 = coeffs_[0] + coeffs_[1] * x0 + coeffs_[2] * x0 * x0 + coeffs_[3] * x0 * x0 * x0;
+      AD<double> psides0 = CppAD::atan(coeffs_[1] + 2 * coeffs_[2] * x0 + 3 * coeffs_[3] * x0 * x0);
 
       fg[1 + cte_start + t] = cte1 - (f0 - y0 + v0 * CppAD::sin(epsi0) * MPC_dt);
-      fg[1 + epsi_start + t] = epsi1 - (psi0 - psides0 + (v0 / Lf) * delta0 * MPC_dt);
+      fg[1 + epsi_start + t] = epsi1 - (psi0 - psides0 - (v0 / Lf) * delta0 * MPC_dt); // NOTE: Unity coordinates
 
     }
 

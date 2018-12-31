@@ -41,16 +41,15 @@ int main() {
 
   uWS::Hub h;
 
-  PID pid;
-  pid.Init(0.3, 0., 20.);
   Localizer localizer{map, 10, 3};
 
-  PIDContoller controller{localizer, pid};
+  //PID pid;
+  //pid.Init(0.3, 0., 20.);
+  //PIDContoller controller{localizer, pid};
+
+  MPCContoller controller{localizer};
 
   initHub(h, controller);
-
-  //MPC mpc;
-  // TODO call initHub with concrete Controller
 
   int port = 4567;
   if (h.listen(port)) {

@@ -23,7 +23,7 @@ const size_t epsi_start = cte_start + MPC_N;
 const size_t delta_start = epsi_start + MPC_N;
 const size_t a_start = delta_start + MPC_N - 1;
 
-const double MCP_vref = 40;
+const double MCP_vref = 0.2;
 
 struct OptResult {
   double cost;
