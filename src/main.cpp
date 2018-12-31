@@ -41,13 +41,14 @@ int main() {
 
   uWS::Hub h;
 
-  Localizer localizer{map, 10, 3};
+  Localizer localizer{map, 5, 3};
 
   //PID pid;
   //pid.Init(0.3, 0., 20.);
   //PIDContoller controller{localizer, pid};
 
-  MPCContoller controller{localizer};
+  //MPCContoller controller{localizer};
+  NewMPC controller{};
 
   initHub(h, controller);
 

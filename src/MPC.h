@@ -1,8 +1,11 @@
 #ifndef MPC_H
 #define MPC_H
 
+#include <iostream>
 #include <vector>
 #include "Eigen-3.3/Eigen/Core"
+#include "Eigen-3.3/Eigen/QR"
+#include "Eigen-3.3/Eigen/Dense"
 #include "Controller.h"
 #include "Localizer.h"
 
@@ -55,6 +58,49 @@ public:
 private:
 
   Localizer localizer_;
+
+};
+
+class NewMPC : public Controller {
+
+public:
+
+  void setWaypoints(std::vector<double> ptsx, std::vector<double> ptsy) override {
+
+    waypoints_.x = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(ptsx.data(), ptsx.size());
+    waypoints_.y = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(ptsy.data(), ptsy.size());
+
+  }
+
+  ControllerResult activate(double x, double y, double psi, double v) override {
+
+    auto vehicle_pose = createPose(x, y, psi);
+    auto t_map_to_vehicle = invertPose(vehicle_pose);
+    auto wp = waypoints_.transformAll(t_map_to_vehicle);
+
+    Eigen::VectorXd coeffs = polyfit(wp.x, wp.y, 3);
+
+    Line line = createLine(wp.x[0], wp.y[0], wp.x[1], wp.y[1]);
+
+    Errors err = errorsFromLine(line);
+    std::cout << "cte=" << err.cte << std::endl;
+
+    Eigen::VectorXd state{6};
+    state << x, y, psi, v, err.cte, err.epsi;
+
+    OptResult opt_res = solve(state, coeffs);
+
+    ControllerResult res{};
+    res.steer_value = opt_res.variables[delta_start + 1];
+    res.throttle_value = opt_res.variables[a_start + 1];
+
+    return res;
+
+  }
+
+private:
+
+  WaypointsMap waypoints_;
 
 };
 

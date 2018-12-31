@@ -25,6 +25,7 @@ class Controller {
 public:
 
   virtual ControllerResult activate(double x, double y, double psi, double v) = 0;
+  virtual void setWaypoints(std::vector<double> ptsx, std::vector<double> ptsy) = 0;
 
 };
 
