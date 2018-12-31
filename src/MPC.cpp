@@ -22,18 +22,23 @@ struct FG_eval {
     // Any additions to the cost should be added to `fg[0]`
     fg[0] = 0;
 
-    for (unsigned int t = 0; t < MPC_N; t++) {
-
+    // The part of the cost based on the reference state.
+    for (int t = 0; t < MPC_N; t++) {
       fg[0] += CppAD::pow(vars[cte_start + t], 2);
       fg[0] += CppAD::pow(vars[epsi_start + t], 2);
-
       fg[0] += CppAD::pow(vars[v_start + t] - MCP_vref, 2);
+    }
+
+    // Minimize the use of actuators.
+    for (int t = 0; t < MPC_N - 1; t++) {
       fg[0] += CppAD::pow(vars[delta_start + t], 2);
+      fg[0] += CppAD::pow(vars[a_start + t], 2);
+    }
 
-      if (t < MPC_N - 1) {
-        fg[0] += CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
-      }
-
+    // Minimize the value gap between sequential actuations.
+    for (int t = 0; t < MPC_N - 2; t++) {
+      fg[0] += CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+      fg[0] += CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
     }
 
     fg[1 + x_start] = vars[x_start];
