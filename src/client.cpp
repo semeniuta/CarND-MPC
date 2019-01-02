@@ -77,7 +77,7 @@ void initHub(uWS::Hub& h, Controller& controller) {
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          msgJson["steering_angle"] = res.steer_value / deg2rad(25);
+          msgJson["steering_angle"] = -1  *  res.steer_value / deg2rad(25);
           msgJson["throttle"] = res.throttle_value;
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system

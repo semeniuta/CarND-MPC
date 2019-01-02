@@ -79,14 +79,17 @@ public:
     auto wp = waypoints_.transformAll(t_map_to_vehicle);
 
     Eigen::VectorXd coeffs = polyfit(wp.x, wp.y, 3);
+    std::cout << "Coefficients:\n" << coeffs << std::endl;
 
-    Line line = createLine(wp.x[0], wp.y[0], wp.x[1], wp.y[1]);
+    auto closest = findClosestWaypoint(wp);
+    Line closest_line = closestLine(wp, closest);
 
-    Errors err = errorsFromLine(line);
+    Errors err = errorsFromLine(closest_line);
     std::cout << "cte=" << err.cte << std::endl;
+    std::cout << "epsi=" << err.epsi << std::endl;
 
     Eigen::VectorXd state{6};
-    state << x, y, psi, v, err.cte, err.epsi;
+    state << 0, 0, 0, v, err.cte, err.epsi;
 
     OptResult opt_res = solve(state, coeffs);
 

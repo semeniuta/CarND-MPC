@@ -29,6 +29,6 @@ void Localizer::activate(double x, double y, double psi, double v) {
 
   Line closest_line = closestLine(waypoints_from_vehicle_, closest_);
   Errors err = errorsFromLine(closest_line);
-  state_ << x, y, psi, v, err.cte, err.epsi;
+  state_ << 0, 0, 0, v, err.cte, err.epsi;
 
 }

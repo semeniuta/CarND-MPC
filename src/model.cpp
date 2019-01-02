@@ -18,7 +18,7 @@ Eigen::VectorXd kinematicModel(const Eigen::VectorXd& state, const Eigen::Vector
 
   next_state << x + v * cos(psi) * dt,
                 y + v * sin(psi) * dt,
-                psi - (v / Lf) * delta * dt, // NOTE: Unity coordinates
+                psi + (v / Lf) * delta * dt, // NOTE: In Unity coordinates: psi - ...
                 v + a * dt;
 
   return next_state;
