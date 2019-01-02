@@ -9,31 +9,63 @@
 #include "Controller.h"
 #include "Localizer.h"
 
-// Timestep length and duration
-const size_t MPC_N = 25;
-const double MPC_dt = 0.05;
-
-const size_t MPC_nvars = MPC_N * 6 + (MPC_N - 1) * 2;
-const size_t MPC_nconstraints = MPC_N * 6;
-
-// Start indices in the variables' vector
-const size_t x_start = 0;
-const size_t y_start = x_start + MPC_N;
-const size_t psi_start = y_start + MPC_N;
-const size_t v_start = psi_start + MPC_N;
-const size_t cte_start = v_start + MPC_N;
-const size_t epsi_start = cte_start + MPC_N;
-const size_t delta_start = epsi_start + MPC_N;
-const size_t a_start = delta_start + MPC_N - 1;
-
-const double MCP_vref = 0.2;
-
 struct OptResult {
   double cost;
   std::vector<double> variables;
+
 };
 
-OptResult solve(const Eigen::VectorXd& state, const Eigen::VectorXd& coeffs);
+struct MPCConfig {
+  size_t N_;
+  double dt_;
+  double vref_;
+
+  size_t nvars_;
+  size_t nconstraints_;
+
+  size_t x_start_;
+  size_t y_start_;
+  size_t psi_start_;
+  size_t v_start_;
+  size_t cte_start_;
+  size_t epsi_start_;
+  size_t delta_start_;
+  size_t a_start_;
+
+  MPCConfig() = delete;
+
+  MPCConfig(size_t N, double dt, double vref)
+      : N_{N},
+        dt_{dt},
+        vref_{vref} {
+
+    nvars_ = N_ * 6 + (N_ - 1) * 2;
+    nconstraints_ = N_ * 6;
+
+    x_start_ = 0;
+    y_start_ = x_start_ + N_;
+    psi_start_ = y_start_ + N_;
+    v_start_ = psi_start_ + N_;
+    cte_start_ = v_start_ + N_;
+    epsi_start_ = cte_start_ + N_;
+    delta_start_ = epsi_start_ + N_;
+    a_start_ = delta_start_ + N_ - 1;
+
+  }
+
+  std::vector<double> getNextVariables(const OptResult res) const {
+
+    std::vector<double> next{res.variables[x_start_ + 1],   res.variables[y_start_ + 1],
+                             res.variables[psi_start_ + 1], res.variables[v_start_ + 1],
+                             res.variables[cte_start_ + 1], res.variables[epsi_start_ + 1],
+                             res.variables[delta_start_],   res.variables[a_start_]};
+
+    return next;
+  }
+
+};
+
+OptResult solve(const Eigen::VectorXd& state, const Eigen::VectorXd& coeffs, const MPCConfig& conf);
 
 class MPCContoller : public Controller {
 
@@ -45,11 +77,12 @@ public:
 
     localizer_.activate(x, y, psi, v);
 
-    OptResult opt_res = solve(localizer_.state_, localizer_.poly_coeffs_);
+    MPCConfig conf{25, 0.05, 0.2};
+    OptResult opt_res = solve(localizer_.state_, localizer_.poly_coeffs_, conf);
 
     ControllerResult res{};
-    res.steer_value = opt_res.variables[delta_start + 1];
-    res.throttle_value = opt_res.variables[a_start + 1];
+    res.steer_value = opt_res.variables[conf.delta_start_ + 1];
+    res.throttle_value = opt_res.variables[conf.a_start_ + 1];
 
     return res;
 
@@ -91,11 +124,12 @@ public:
     Eigen::VectorXd state{6};
     state << 0, 0, 0, v, err.cte, err.epsi;
 
-    OptResult opt_res = solve(state, coeffs);
+    MPCConfig conf{25, 0.05, 0.2};
+    OptResult opt_res = solve(state, coeffs, conf);
 
     ControllerResult res{};
-    res.steer_value = opt_res.variables[delta_start + 1];
-    res.throttle_value = opt_res.variables[a_start + 1];
+    res.steer_value = opt_res.variables[conf.delta_start_ + 1];
+    res.throttle_value = opt_res.variables[conf.a_start_ + 1];
 
     return res;
 
