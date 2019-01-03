@@ -7,6 +7,8 @@
 
 #include "geometry.h"
 
+// NOTE: This is a legacy component
+
 class Localizer {
 
 public:

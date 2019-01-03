@@ -20,7 +20,7 @@ This project involves the Term 2 Simulator which can be downloaded [here](https:
 
 The MPC controller (`MPCController`) is configured with `MPCConfig` structure. It is instantiated with three required parameters: 
 
-* `N` - number of interations
+* `N` - number of iterations
 * `dt` - time increment
 *  `vref` - reference velocity
 
@@ -38,11 +38,11 @@ fg[0] += conf_.change_a_penalty_ *
          CppAD::pow(vars[conf_.a_start_ + t + 1] - vars[conf_.a_start_ + t], 2);
 ```
 
-These parameters are set to the following values: `change_delta_penalty_=100, change_a_penalty_ = 500`. 
+These parameters are set to the following values: `change_delta_penalty_=100, change_a_penalty_=500`. 
 
-The controller exerts the best behavior with the following terquired parameters: `(N=50, dt=0.2, vref=5.)`. Other workable,  albeit less stable, confiugration is `(N=30, dt=0.1, vref=10.)`. 
+The controller exerts the best behavior with the following required parameters: `(N=50, dt=0.2, vref=5.)`. Other workable,  albeit less stable, configuration is `(N=30, dt=0.1, vref=10.)`. 
 
-It is observed that for larger `vref`, it is important that the total prediction time (product `N * dt`)  is not too big. In addition, `dt`  should not be too small. Setting the penalizing factors stablizes the driving process.
+It is observed that for larger `vref`, it is important that the total prediction time (product `N * dt`)  is not too big. In addition, `dt`  should not be too small. Setting the penalizing factors stablizes the driving behavior.
 
 ## Latency
 
