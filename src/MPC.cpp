@@ -5,6 +5,46 @@
 
 using CppAD::AD;
 
+void MPCController::setWaypoints(std::vector<double> ptsx, std::vector<double> ptsy) {
+
+  waypoints_.x = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(ptsx.data(), ptsx.size());
+  waypoints_.y = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(ptsy.data(), ptsy.size());
+
+}
+
+ControllerResult MPCController::activate(double x, double y, double psi, double v) {
+
+  auto vehicle_pose = createPose(x, y, psi);
+  auto t_map_to_vehicle = invertPose(vehicle_pose);
+  auto wp = waypoints_.transformAll(t_map_to_vehicle);
+
+  Eigen::VectorXd coeffs = polyfit(wp.x, wp.y, 3);
+
+  Line line = createLine(wp.x[0], wp.y[0], wp.x[1], wp.y[1]);
+  Errors err = errorsFromLine(line);
+
+  Eigen::VectorXd state{6};
+  state << 0, 0, 0, v, err.cte, err.epsi;
+
+  OptResult opt_res = solve(state, coeffs, conf_);
+
+  ControllerResult res{};
+  res.steer_value = opt_res.variables[conf_.delta_start_ + 1];
+  res.throttle_value = opt_res.variables[conf_.a_start_ + 1];
+
+  std::vector<double> xs = conf_.getX(opt_res);
+  res.mpc_x_vals = xs;
+  res.mpc_y_vals = conf_.getY(opt_res);
+
+  res.next_x_vals = xs;
+  for (const double& xval : xs) {
+    res.next_y_vals.push_back(polyeval(coeffs, xval));
+  }
+
+  return res;
+
+}
+
 struct FG_eval {
 
   // Fitted polynomial coefficients
@@ -12,9 +52,8 @@ struct FG_eval {
   MPCConfig conf_;
 
   FG_eval(const Eigen::VectorXd& coeffs, const MPCConfig& conf)
-  : coeffs_{coeffs},
-    conf_{conf}
-    { }
+      : coeffs_{coeffs},
+        conf_{conf} {}
 
   typedef CPPAD_TESTVECTOR(AD<double>) ADvector;
 
@@ -70,7 +109,8 @@ struct FG_eval {
 
       fg[1 + conf_.x_start_ + t] = x1 - (x0 + v0 * CppAD::cos(psi0) * conf_.dt_);
       fg[1 + conf_.y_start_ + t] = y1 - (y0 + v0 * CppAD::sin(psi0) * conf_.dt_);
-      fg[1 + conf_.psi_start_ + t] = psi1 - (psi0 + (v0 / Lf) * delta0 * conf_.dt_);  // NOTE: In Unity coordinates: psi0 - ...
+      fg[1 + conf_.psi_start_ + t] =
+          psi1 - (psi0 + (v0 / Lf) * delta0 * conf_.dt_);  // NOTE: In Unity coordinates: psi0 - ...
       fg[1 + conf_.v_start_ + t] = v1 - (v0 + a0 * conf_.dt_);
 
       AD<double> f0 = coeffs_[0] + coeffs_[1] * x0 + coeffs_[2] * x0 * x0 + coeffs_[3] * x0 * x0 * x0;

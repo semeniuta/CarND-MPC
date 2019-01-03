@@ -87,59 +87,25 @@ struct MPCConfig {
 
 };
 
-OptResult solve(const Eigen::VectorXd& state, const Eigen::VectorXd& coeffs, const MPCConfig& conf);
-
-class NewMPC : public Controller {
+class MPCController : public Controller {
 
 public:
 
-  void setWaypoints(std::vector<double> ptsx, std::vector<double> ptsy) override {
+  MPCController() = delete;
 
-    waypoints_.x = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(ptsx.data(), ptsx.size());
-    waypoints_.y = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(ptsy.data(), ptsy.size());
+  explicit MPCController(const MPCConfig& conf) : conf_{conf} { };
 
-  }
+  void setWaypoints(std::vector<double> ptsx, std::vector<double> ptsy) override;
 
-  ControllerResult activate(double x, double y, double psi, double v) override {
-
-    auto vehicle_pose = createPose(x, y, psi);
-    auto t_map_to_vehicle = invertPose(vehicle_pose);
-    auto wp = waypoints_.transformAll(t_map_to_vehicle);
-
-    Eigen::VectorXd coeffs = polyfit(wp.x, wp.y, 3);
-
-    Line line = createLine(wp.x[0], wp.y[0], wp.x[1], wp.y[1]);
-    Errors err = errorsFromLine(line);
-
-    Eigen::VectorXd state{6};
-    state << 0, 0, 0, v, err.cte, err.epsi;
-
-    // 50, 0.2, 5.    <- slow, but well
-    // 20, 0.05, 20.  <- faster, a bit wiggly, doesn't deal with sharp turns
-    MPCConfig conf{50, 0.2, 5.};
-    OptResult opt_res = solve(state, coeffs, conf);
-
-    ControllerResult res{};
-    res.steer_value = opt_res.variables[conf.delta_start_ + 1];
-    res.throttle_value = opt_res.variables[conf.a_start_ + 1];
-
-    std::vector<double> xs = conf.getX(opt_res);
-    res.mpc_x_vals = xs;
-    res.mpc_y_vals = conf.getY(opt_res);
-
-    res.next_x_vals = xs;
-    for (const double& xval : xs) {
-      res.next_y_vals.push_back( polyeval(coeffs, xval) );
-    }
-
-    return res;
-
-  }
+  ControllerResult activate(double x, double y, double psi, double v) override;
 
 private:
 
+  MPCConfig conf_;
   WaypointsMap waypoints_;
 
 };
+
+OptResult solve(const Eigen::VectorXd& state, const Eigen::VectorXd& coeffs, const MPCConfig& conf);
 
 #endif /* MPC_H */
