@@ -53,7 +53,7 @@ struct MPCConfig {
 
   }
 
-  std::vector<double> getNextVariables(const OptResult res) const {
+  std::vector<double> getNextVariables(const OptResult& res) const {
 
     std::vector<double> next{res.variables[x_start_ + 1],   res.variables[y_start_ + 1],
                              res.variables[psi_start_ + 1], res.variables[v_start_ + 1],
@@ -61,6 +61,28 @@ struct MPCConfig {
                              res.variables[delta_start_],   res.variables[a_start_]};
 
     return next;
+  }
+
+  std::vector<double> getX(const OptResult& res) const {
+
+    std::vector<double> x;
+    for (size_t i = x_start_; i < x_start_ + N_; i++) {
+      x.push_back(res.variables[i]);
+    }
+
+    return x;
+
+  }
+
+  std::vector<double> getY(const OptResult& res) const {
+
+    std::vector<double> y;
+    for (size_t i = y_start_; i < y_start_ + N_; i++) {
+      y.push_back(res.variables[i]);
+    }
+
+    return y;
+
   }
 
 };
@@ -112,24 +134,30 @@ public:
     auto wp = waypoints_.transformAll(t_map_to_vehicle);
 
     Eigen::VectorXd coeffs = polyfit(wp.x, wp.y, 3);
-    std::cout << "Coefficients:\n" << coeffs << std::endl;
 
-    auto closest = findClosestWaypoint(wp);
-    Line closest_line = closestLine(wp, closest);
-
-    Errors err = errorsFromLine(closest_line);
-    std::cout << "cte=" << err.cte << std::endl;
-    std::cout << "epsi=" << err.epsi << std::endl;
+    Line line = createLine(wp.x[0], wp.y[0], wp.x[1], wp.y[1]);
+    Errors err = errorsFromLine(line);
 
     Eigen::VectorXd state{6};
     state << 0, 0, 0, v, err.cte, err.epsi;
 
-    MPCConfig conf{25, 0.05, 0.2};
+    // 50, 0.2, 5.    <- slow, but well
+    // 20, 0.05, 20.  <- faster, a bit wiggly, doesn't deal with sharp turns
+    MPCConfig conf{50, 0.2, 5.};
     OptResult opt_res = solve(state, coeffs, conf);
 
     ControllerResult res{};
     res.steer_value = opt_res.variables[conf.delta_start_ + 1];
     res.throttle_value = opt_res.variables[conf.a_start_ + 1];
+
+    std::vector<double> xs = conf.getX(opt_res);
+    res.mpc_x_vals = xs;
+    res.mpc_y_vals = conf.getY(opt_res);
+
+    res.next_x_vals = xs;
+    for (const double& xval : xs) {
+      res.next_y_vals.push_back( polyeval(coeffs, xval) );
+    }
 
     return res;
 

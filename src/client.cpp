@@ -69,9 +69,9 @@ void initHub(uWS::Hub& h, Controller& controller) {
            *
            */
 
-          //ControllerResult res = controller.activate(state(0), state(1), state(2), state(3));
 
           controller.setWaypoints(ptsx, ptsy);
+          //ControllerResult res = controller.activate(state(0), state(1), state(2), state(3));
           ControllerResult res = controller.activate(px, py, psi, v);
 
           json msgJson;
