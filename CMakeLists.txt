@@ -31,9 +31,9 @@ endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 add_executable(mpc src/main.cpp ${core_sources})
 target_link_libraries(mpc ipopt z ssl uv uWS)
 
-add_executable(play src/play.cpp ${core_sources})
-target_link_libraries(play ipopt z ssl uv uWS)
+#add_executable(play src/play.cpp ${core_sources})
+#target_link_libraries(play ipopt z ssl uv uWS)
 
-add_executable(example src/example.cpp src/plotsim.cpp ${core_sources})
-target_link_libraries(example ipopt z ssl uv uWS python)
+#add_executable(example src/example.cpp src/plotsim.cpp ${core_sources})
+#target_link_libraries(example ipopt z ssl uv uWS python)
 

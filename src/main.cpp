@@ -8,7 +8,7 @@ int main() {
 
   uWS::Hub h;
 
-  MPCConfig conf{50, 0.2, 5.}; // Best so far: 50, 0.2, 5.
+  MPCConfig conf{50, 0.2, 5.};
   conf.change_delta_penalty_ = 100;
   conf.change_a_penalty_ = 500;
 
