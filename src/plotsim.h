@@ -45,7 +45,7 @@ struct History {
 
 };
 
-void plot_mpc(const History& h);
+void plot_mpc(const History& h, const Eigen::VectorXd& coeffs);
 
 History simulateMPC(const Eigen::VectorXd& state, const Eigen::VectorXd& coeffs, int n_iters, const MPCConfig& conf);
 

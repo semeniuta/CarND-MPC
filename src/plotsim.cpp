@@ -3,7 +3,9 @@
 //
 
 #include "plotsim.h"
+#include "geometry.h"
 #include "matplotlibcpp.h"
+#include <algorithm>
 
 namespace plt = matplotlibcpp;
 
@@ -29,7 +31,7 @@ History simulateMPC(const Eigen::VectorXd& state, const Eigen::VectorXd& coeffs,
 
 }
 
-void plot_mpc(const History& h) {
+void plot_mpc(const History& h, const Eigen::VectorXd& coeffs) {
 
   plt::subplot(3, 2, 1);
   plt::title("cte");
@@ -54,6 +56,13 @@ void plot_mpc(const History& h) {
   plt::subplot(3, 2, 6);
   plt::title("x, y");
   plt::plot(h.x, h.y);
+
+  std::vector<double> fx;
+  for (const double& val : h.x) {
+    fx.push_back( polyeval(coeffs, val) );
+  }
+
+  plt::plot(h.x, fx, "c-");
 
   plt::save("dynamics.png");
 
