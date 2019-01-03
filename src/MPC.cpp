@@ -83,6 +83,10 @@ struct FG_eval {
       fg[0] += conf_.change_a_penalty_ * CppAD::pow(vars[conf_.a_start_ + t + 1] - vars[conf_.a_start_ + t], 2);
     }
 
+    // Minimize distance from the first point to the last
+    fg[0] += CppAD::pow(vars[conf_.x_start_ + conf_.N_] - vars[conf_.x_start_], 2) +
+             CppAD::pow(vars[conf_.y_start_ + conf_.N_] - vars[conf_.y_start_], 2);
+
     fg[1 + conf_.x_start_] = vars[conf_.x_start_];
     fg[1 + conf_.y_start_] = vars[conf_.y_start_];
     fg[1 + conf_.psi_start_] = vars[conf_.psi_start_];
