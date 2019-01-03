@@ -79,8 +79,8 @@ struct FG_eval {
 
     // Minimize the value gap between sequential actuations.
     for (int t = 0; t < conf_.N_ - 2; t++) {
-      fg[0] += CppAD::pow(vars[conf_.delta_start_ + t + 1] - vars[conf_.delta_start_ + t], 2);
-      fg[0] += CppAD::pow(vars[conf_.a_start_ + t + 1] - vars[conf_.a_start_ + t], 2);
+      fg[0] += conf_.change_delta_penalty_ * CppAD::pow(vars[conf_.delta_start_ + t + 1] - vars[conf_.delta_start_ + t], 2);
+      fg[0] += conf_.change_a_penalty_ * CppAD::pow(vars[conf_.a_start_ + t + 1] - vars[conf_.a_start_ + t], 2);
     }
 
     fg[1 + conf_.x_start_] = vars[conf_.x_start_];

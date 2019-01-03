@@ -32,6 +32,9 @@ struct MPCConfig {
   size_t delta_start_;
   size_t a_start_;
 
+  double change_a_penalty_;
+  double change_delta_penalty_;
+
   MPCConfig() = delete;
 
   MPCConfig(size_t N, double dt, double vref)
@@ -50,6 +53,9 @@ struct MPCConfig {
     epsi_start_ = cte_start_ + N_;
     delta_start_ = epsi_start_ + N_;
     a_start_ = delta_start_ + N_ - 1;
+
+    change_a_penalty_ = 1.;
+    change_delta_penalty_ = 1.;
 
   }
 

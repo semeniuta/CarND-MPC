@@ -54,12 +54,12 @@ void initHub(uWS::Hub& h, Controller& controller) {
           double steering_angle = j[1]["steering_angle"];
           double throttle = j[1]["throttle"];
 
-//          Eigen::VectorXd sensed_state{4};
-//          sensed_state << px, py, psi, v;
-//          Eigen::VectorXd sensed_act{2};
-//          sensed_act << steering_angle, throttle;
-//          Eigen::VectorXd state{4};
-//          state = kinematicModel(sensed_state, sensed_act, 0.1); // 100 ms
+          Eigen::VectorXd sensed_state{4};
+          sensed_state << px, py, psi, v;
+          Eigen::VectorXd sensed_act{2};
+          sensed_act << steering_angle, throttle;
+          Eigen::VectorXd state{4};
+          state = kinematicModel(sensed_state, sensed_act, 0.1); // 100 ms
 
           /*
            * Calculate steering angle and throttle using MPC
@@ -69,10 +69,9 @@ void initHub(uWS::Hub& h, Controller& controller) {
            *
            */
 
-
           controller.setWaypoints(ptsx, ptsy);
-          //ControllerResult res = controller.activate(state(0), state(1), state(2), state(3));
-          ControllerResult res = controller.activate(px, py, psi, v);
+          ControllerResult res = controller.activate(state(0), state(1), state(2), state(3));
+          //ControllerResult res = controller.activate(px, py, psi, v);
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
