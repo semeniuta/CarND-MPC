@@ -89,33 +89,6 @@ struct MPCConfig {
 
 OptResult solve(const Eigen::VectorXd& state, const Eigen::VectorXd& coeffs, const MPCConfig& conf);
 
-class MPCContoller : public Controller {
-
-public:
-
-  explicit MPCContoller(const Localizer& localizer) :localizer_{localizer} { }
-
-  ControllerResult activate(double x, double y, double psi, double v) override {
-
-    localizer_.activate(x, y, psi, v);
-
-    MPCConfig conf{25, 0.05, 0.2};
-    OptResult opt_res = solve(localizer_.state_, localizer_.poly_coeffs_, conf);
-
-    ControllerResult res{};
-    res.steer_value = opt_res.variables[conf.delta_start_ + 1];
-    res.throttle_value = opt_res.variables[conf.a_start_ + 1];
-
-    return res;
-
-  }
-
-private:
-
-  Localizer localizer_;
-
-};
-
 class NewMPC : public Controller {
 
 public:
